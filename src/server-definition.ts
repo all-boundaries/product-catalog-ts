@@ -1,66 +1,33 @@
 import type { Serve } from "bun";
+import { allProducts } from "./product/all-products";
 
-const allProducts = [
-  {
-    id: "prd-2nuSChH",
-    name: "Product 1",
-    description: "Description 1",
-    status: "active",
-    specs: [],
-    tags: [],
-  },
-  {
-    id: "prd-CoPPX-5",
-    name: "Product 2",
-    description: "Description 2",
-    status: "active",
-    specs: [],
-    tags: [],
-  },
-  {
-    id: "prd-RQBQcvr",
-    name: "Product 3",
-    description: "Description 3",
-    status: "active",
-    specs: [],
-    tags: [],
-  },
-  {
-    id: "prd-pIZvird",
-    name: "Product 4",
-    description: "Description 4",
-    status: "active",
-    specs: [],
-    tags: [],
-  },
-  {
-    id: "prd-IIkZDUO",
-    name: "Product 5",
-    description: "Description 5",
-    status: "active",
-    specs: [],
-    tags: [],
-  },
-  {
-    id: "prd-8ciKO_u",
-    name: "Product 6",
-    description: "Description 6",
-    status: "active",
-    specs: [],
-    tags: [],
-  },
-];
-
-export const serverDefinition: Serve<unknown> = Bun.serve({
+export const serverDefinition: Serve<unknown> = {
   hostname: "localhost",
   routes: {
-    "/products": () => Response.json({ data: allProducts }),
-    "/products/:id": (req) => {
-      const product = allProducts.find((p) => p.id === req.params.id);
+    "/products/": async () => {
+      try {
+        const products = await allProducts();
+        return Response.json({ data: products });
+      } catch (e) {
+        return Response.json(
+          {
+            type: "probs/something-went-wrong",
+            title: "We do not know what happened, please try again",
+          },
+          { status: 503 },
+        );
+      }
+    },
+    "/products/:id": async (req) => {
+      const products = await allProducts();
+      const product = products.find((p) => p.id === req.params.id);
 
       if (!product) {
         return Response.json(
-          { errors: [{ msg: "Product not found" }] },
+          {
+            type: "probs/not-found",
+            title: "Product does not exist",
+          },
           { status: 404 },
         );
       }
@@ -68,4 +35,4 @@ export const serverDefinition: Serve<unknown> = Bun.serve({
       return Response.json(product);
     },
   },
-});
+};
